@@ -1,4 +1,5 @@
-import React from 'react';
+'use client'
+import React, {useEffect} from 'react';
 import {
   Table,
   TableBody,
@@ -7,6 +8,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import {getSymbols} from "@/service/oneservice";
 
 const invoices = [
   {
@@ -30,6 +32,17 @@ const invoices = [
 ]
 
 const TableComponent = () => {
+
+  const fetchSymbols = async () => {
+    const hi = await fetch('/api/health/db')
+    const response = await hi.json();
+    console.log('hi', response)
+  };
+
+  useEffect(() => {
+    fetchSymbols();
+  }, [])
+
   return (
     <div>
       <Table>
