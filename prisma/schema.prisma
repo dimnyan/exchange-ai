@@ -15,18 +15,20 @@ datasource db {
   // url      = env("POSTGRES_PRISMA_URL")
 }
 
-model symbols {
-  id                 String   @default(uuid(4)) @unique
+model Symbol {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name               String
   abbr               String
-  url                String
-  price              Float
-  volume_24_hours    Float
-  market_cap         Float
-  circulating_supply Float
-  max_supply         Float
-  total_supply       Float
-  date_taken         String
-  created_at         DateTime
-  updated_at         DateTime
+  url                String?
+  price              Float?
+  volume_24_hours    Float?
+  market_cap         Float?
+  circulating_supply Float?
+  max_supply         Float?
+  total_supply       Float?
+  date_taken         String?
+  created_at         DateTime  @default(now()) @db.Timestamp()
+  updated_at         DateTime? @updatedAt @db.Timestamp()
+
+  @@map("symbols")
 }

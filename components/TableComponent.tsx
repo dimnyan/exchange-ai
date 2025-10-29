@@ -34,13 +34,16 @@ const invoices = [
 const TableComponent = () => {
 
   const fetchSymbols = async () => {
-    const hi = await fetch('/api/health/db')
-    const response = await hi.json();
-    console.log('hi', response)
+    // const hi = await fetch('/api/symbols')
+    // const response = await hi.json();
+    // console.log('hi', response)
+    return await getSymbols();
   };
 
   useEffect(() => {
     fetchSymbols();
+    // const symbols = getSymbols();
+    // console.log(symbols);
   }, [])
 
   return (
