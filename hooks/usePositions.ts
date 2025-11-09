@@ -4,6 +4,7 @@ import { ref, onValue, off } from "firebase/database";
 import { db } from "@/lib/firebase";
 import { auth } from "@/lib/firebase";
 import {Position} from "@/model";
+import {onAuthStateChanged} from "firebase/auth";
 
 
 export const usePositions = () => {
@@ -11,34 +12,45 @@ export const usePositions = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) {
-      setPositions([]);
-      setLoading(false);
-      return;
-    }
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setPositions([]);
+        setLoading(false);
+        return;
+      }
 
-    const positionsRef = ref(db, `users/${user.uid}/positions`);
-    const unsubscribe = onValue(
-      positionsRef,
-      (snapshot) => {
-        const data = snapshot.val();
-        const list: Position[] = data
-          ? Object.entries(data).map(([id, val]: [string, any]) => ({
+      const positionsRef = ref(db, `users/${user.uid}/positions`);
+
+      const unsubscribePositions = onValue(
+        positionsRef,
+        (snapshot) => {
+          const data = snapshot.val();
+          if (!data) {
+            setPositions([]);
+            setLoading(false);
+            return;
+          }
+
+          const list: Position[] = Object.entries(data).map(([id, val]: [string, any]) => ({
             id,
             ...val,
-          }))
-          : [];
-        setPositions(list);
-        setLoading(false);
-      },
-      (err) => {
-        console.error(err);
-        setLoading(false);
-      }
-    );
+          }));
 
-    return () => off(positionsRef, "value", unsubscribe);
+          setPositions(list);
+          setLoading(false);
+        },
+        (error) => {
+          console.error("Positions error:", error);
+          setLoading(false);
+        }
+      );
+
+      return () => {
+        off(positionsRef, "value", unsubscribePositions);
+      };
+    });
+
+    return unsubscribeAuth;
   }, []);
 
   return { positions, loading };
