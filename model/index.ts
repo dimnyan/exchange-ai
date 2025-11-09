@@ -23,4 +23,5 @@ export type UserProfile = {
   name: string;
   riskPct: number;
   createdAt: number;
+  accountBalance: number;
 };

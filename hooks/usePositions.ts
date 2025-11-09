@@ -4,7 +4,7 @@ import { ref, onValue, off } from "firebase/database";
 import { db } from "@/lib/firebase";
 import { auth } from "@/lib/firebase";
 import {Position} from "@/model";
-import {onAuthStateChanged} from "firebase/auth";
+import {onAuthStateChanged, User} from "firebase/auth";
 
 
 export const usePositions = () => {
@@ -12,7 +12,12 @@ export const usePositions = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user: User | null) => {
+      // Clear previous listener
+      if (window.currentPositionsListener) {
+        off(window.currentPositionsListener);
+      }
+
       if (!user) {
         setPositions([]);
         setLoading(false);
@@ -20,8 +25,9 @@ export const usePositions = () => {
       }
 
       const positionsRef = ref(db, `users/${user.uid}/positions`);
+      window.currentPositionsListener = positionsRef;
 
-      const unsubscribePositions = onValue(
+      const unsubscribe = onValue(
         positionsRef,
         (snapshot) => {
           const data = snapshot.val();
@@ -40,18 +46,31 @@ export const usePositions = () => {
           setLoading(false);
         },
         (error) => {
-          console.error("Positions error:", error);
+          console.error("Positions load error:", error);
           setLoading(false);
         }
       );
 
       return () => {
-        off(positionsRef, "value", unsubscribePositions);
+        off(positionsRef);
+        window.currentPositionsListener = null;
       };
     });
 
-    return unsubscribeAuth;
+    return () => {
+      unsubscribeAuth();
+      if (window.currentPositionsListener) {
+        off(window.currentPositionsListener);
+      }
+    };
   }, []);
 
   return { positions, loading };
 };
+
+// Global to prevent memory leaks
+declare global {
+  interface Window {
+    currentPositionsListener: any;
+  }
+}

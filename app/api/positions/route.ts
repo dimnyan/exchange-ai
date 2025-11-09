@@ -8,21 +8,29 @@ const auth = getAuth(adminApp);
 const db = getDatabase(adminApp);
 
 export async function POST(req: NextRequest) {
-  console.log(req.body)
   try {
     const token = req.headers.get("authorization")?.split("Bearer ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "No token" }, { status: 401 });
-    }
+    if (!token) return NextResponse.json({ error: "No token" }, { status: 401 });
 
     const decoded = await auth.verifyIdToken(token);
     const uid = decoded.uid;
 
     const body = await req.json();
-    const { symbol, entry, size, leverage, stopLoss, liquidationPrice, exchange } = body;
+    const {
+      symbol,
+      entry,
+      size,
+      leverage,
+      stopLoss,
+      liquidationPrice,
+      amountEntered,
+      riskUsd,
+      positionUsd,
+      exchange,
+    } = body;
 
     if (!symbol || !entry || !size || !leverage) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const positionsRef = db.ref(`users/${uid}/positions`);
@@ -35,13 +43,16 @@ export async function POST(req: NextRequest) {
       leverage,
       stopLoss,
       liquidationPrice,
+      amountEntered,
+      riskUsd,
+      positionUsd,
       exchange: exchange || "binance",
       createdAt: Date.now(),
     });
 
     return NextResponse.json({ id: newRef.key });
   } catch (err: any) {
-    console.error("Save position error:", err);
+    console.error("Save error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
