@@ -1,10 +1,12 @@
-import TableComponent from "@/components/TableComponent";
+// src/app/page.tsx
+
+import HomeComponent from "@/components/HomeComponent";
+
 
 export default function Home() {
-
   return (
-    <div className={"w-1/2"}>
-      <TableComponent/>
-    </div>
-  );
+    <>
+      {/*<HomeComponent/>*/}
+    </>
+  )
 }
